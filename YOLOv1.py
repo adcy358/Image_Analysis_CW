@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import pickle
 
 
 class Convlayer(nn.Module):
@@ -27,8 +28,7 @@ class YOLOv1(nn.Module):
     *YOLO v1*
     Implementation of YOLO v1 architecture
     """
-
-    def __init__(self, input_channels, arch, S, B, C):
+    def __init__(self, input_channels, arch=None, S=7, B=2, C=4):
         """
         :param input_channels: number of input channels
         :param arch: description of the network architecture
@@ -37,8 +37,11 @@ class YOLOv1(nn.Module):
         :param C: number of classes
         """
         super(YOLOv1, self).__init__()
+        if arch is not None:
+            self.arch = arch
+        else:
+            self.arch = pickle.load(open("default_arch.pkl", "rb"))
         self.in_channels = input_channels
-        self.arch = arch
         self.darknet = self._get_darknet()
         self.fc = nn.Sequential(
             nn.Linear(1024 * S * S, 4096),

@@ -92,7 +92,7 @@ def convert_cellboxes(predictions, S=7, B=2, C=4):
     
     # converted_preds: (c, p, x, y, w, h)
     converted_preds = torch.cat(
-        (predicted_class, best_confidence, converted_bboxes), dim=-1
+        (predicted_class, best_confidence, converted_bound_boxes), dim=-1
     ) # (N, S, S, 1+1+4)  
 
     return converted_preds
@@ -115,5 +115,5 @@ def cellboxes_to_boxes(output, S=7, B=2, C=4):
             bound_boxes.append([x.item() for x in converted_pred[sample_idx, bound_box_idx, :]])
         all_bound_boxes.append(bound_boxes)
 
-    return all_bboxes
+    return all_bound_boxes
      

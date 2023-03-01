@@ -3,7 +3,7 @@ import torch.nn as nn
 from utils import intersection_over_union
 
 class YoloLoss(nn.Module): 
-
+# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/loss.py
     '''
     Compute the loss for the yolo model 
           

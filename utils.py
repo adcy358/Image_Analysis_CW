@@ -1,7 +1,7 @@
 import torch 
 
 def intersection_over_union(boxes_preds, boxes_labels): 
-    
+  
     '''
     Calculates the intersection over union
     
@@ -46,7 +46,7 @@ def intersection_over_union(boxes_preds, boxes_labels):
     return iou
 
 def convert_cellboxes(predictions, S=7, B=2, C=4): 
-    
+# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py   
     """
     Converts bounding boxes output: 
        from: Yolo with an image split size of S relative to the cell
@@ -100,7 +100,7 @@ def convert_cellboxes(predictions, S=7, B=2, C=4):
         
     
 def cellboxes_to_boxes(output, S=7, B=2, C=4): 
-    
+# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py    
     # output: (N, S, S, [c1, c2, c3, c4, p1, x1, y1, w1, h1, p2, x2, y2, w2, h2])  
     converted_pred = convert_cellboxes(output).reshape(output.shape[0], S, S, -1) # (N, S, S, 6)
     converted_pred[..., 0] = converted_pred[..., 0].long() 

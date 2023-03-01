@@ -28,7 +28,7 @@ def train(train_loader, model, optimizer, loss, epochs, load_model=False):
     for epoch in range(epochs):
           
         # save checkpoint   
-        if epoch % 2 == 0: 
+        if epoch % 10 == 0: 
             checkpoint = {
                 'state_dict': model.state_dict(), 
                 'optimizer': optimizer.state_dict(),
@@ -52,7 +52,7 @@ def train(train_loader, model, optimizer, loss, epochs, load_model=False):
             # update progress bar
             loop.set_postfix(loss=loss.item())
             
-        print(f"Mean loss was {sum(mean_loss)/len(mean_loss)}")
+        print(f"\e[34m EPOCH{epoch}: \e[0m Mean loss was {sum(mean_loss)/len(mean_loss)}")
 
         #hyperparameters
 LEARNING_RATE = 2e-5

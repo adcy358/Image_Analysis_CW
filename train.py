@@ -52,7 +52,7 @@ def train(train_loader, model, optimizer, loss, epochs, load_model=False):
             # update progress bar
             loop.set_postfix(loss=loss.item())
             
-        print(f"\e[34m EPOCH{epoch}: \e[0m Mean loss was {sum(mean_loss)/len(mean_loss)}")
+        print(f"\033[34m EPOCH{epoch}: \033[0m Mean loss was {sum(mean_loss)/len(mean_loss)}")
 
         #hyperparameters
 LEARNING_RATE = 2e-5

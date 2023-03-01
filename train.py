@@ -10,32 +10,48 @@ from tqdm import tqdm
 from YOLOv1 import YOLOv1
 import numpy as np 
 
-def train(train_loader, model, optimizer, loss, epochs):
-
-    """
-        Implementation of the training loop.
-    """
+def save_checkpoint(model_state, filename='checkpoints.tar'): 
+    print("-> Saving checkpoint") 
+    torch.save(model_state, filename)      
     
-    for epoch in range(EPOCHS):
+def load_checkpoint(checkpoint): 
+    print("-> Loading checkpoint")
+    model.load_state_dict(checkpoint['state_dict']) 
+    optimizer.load_state_dict(checkpoint['optimizer'])  
+
+def train(train_loader, model, optimizer, loss, epochs, load_model=False):
+    
+    # WARNING: everytime we set load_model=False, it overwrites the previously saved file.
+    if load_model: 
+        load_checkpoint(torch.load('checkpoints.tar')) 
+        
+    for epoch in range(epochs):
+          
+        # save checkpoint   
+        if epoch % 2 == 0: 
+            checkpoint = {
+                'state_dict': model.state_dict(), 
+                'optimizer': optimizer.state_dict(),
+            }
+            save_checkpoint(checkpoint) 
+          
+          
         # https://github.com/tqdm/tqdm.git
         loop = tqdm(train_loader, leave=True)
         mean_loss = []
 
         for batch_idx, (x, y) in enumerate(loop):
             x, y = x.to(DEVICE), y.to(DEVICE)
-            #forward
             output = model(x)
             loss = criterion(output, y)
             mean_loss.append(loss.item())
-            
-            #backward
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            # updates the progress bar
+            # update progress bar
             loop.set_postfix(loss=loss.item())
-
+            
         print(f"Mean loss was {sum(mean_loss)/len(mean_loss)}")
 
         #hyperparameters

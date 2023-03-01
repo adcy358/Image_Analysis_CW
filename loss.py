@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn 
+from utils import intersection_over_union
 
 class YoloLoss(nn.Module): 
 
@@ -18,6 +19,7 @@ class YoloLoss(nn.Module):
         self.S = S 
         self.B = B 
         self.C = C
+        self.mse = nn.MSELoss()
         self.lambda_noobject = 0.5
         self.lambda_coord = 5
         
@@ -98,7 +100,7 @@ class YoloLoss(nn.Module):
         loss = (
             self.lambda_coord * box_loss  # first two rows in paper
             + object_loss  # third row in paper
-            + self.lambda_noobj * no_object_loss  # forth row
+            + self.lambda_noobject * no_object_loss  # forth row
             + class_loss  # fifth row
         )
 

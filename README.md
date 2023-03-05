@@ -10,9 +10,10 @@ https://www.kaggle.com/datasets/biancaferreira/african-wildlife
 - [X] dataset
 - [X] model
 - [X] loss
-- [ ] train / test
+- [X] train / test
+- [X] visualization
+- [X] boundbox converter
+- [X] IOU
 - [ ] metrics
-- [ ] visualization
-- [ ] boundbox converter
-- [ ] IOU
+- [ ] non-max suppression
 - [ ] further architectures

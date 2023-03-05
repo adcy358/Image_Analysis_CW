@@ -141,7 +141,6 @@ def plot_bbox(img_idx, dataset, pred, figsize=448):
     color_map = {0: "red", 1: "blue", 2: "yellow", 3: "green"}
     for c, p, x, y, w, h in pred:
         c = c.int().item()
-        print(c)
         x0 = (x - w / 2) * figsize
         y0 = (y - h / 2) * figsize
         w *= figsize

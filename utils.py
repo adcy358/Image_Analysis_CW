@@ -1,4 +1,7 @@
-import torch 
+import torch
+from matplotlib import pyplot as plt
+from matplotlib.patches import Rectangle
+
 
 def intersection_over_union(boxes_preds, boxes_labels): 
   
@@ -116,4 +119,33 @@ def cellboxes_to_boxes(output, S=7, B=2, C=4):
         all_bound_boxes.append(bound_boxes)
 
     return all_bound_boxes
+
+
+def plot_bbox(img_idx, dataset, pred, figsize=448):
+    """
+    Plots an image and its respective predictions
+
+    Attributes
+    ----------
+    img_idx: int,
+        index of image in dataset;
+    dataset: torch.utils.data.Dataset
+        dataset containing the image;
+    pred: list(Tensor(Class, prob, x, y, w, h)),
+        predicted bounding boxes to be plotted
+    """
+    img = dataset.__getitem__(img_idx)[0]
+    fig, ax = plt.subplots()
+    ax.imshow(img.permute(1, 2, 0))
+
+    color_map = {0: "red", 1: "blue", 2: "yellow", 3: "green"}
+    for c, p, x, y, w, h in pred:
+        c = c.int().item()
+        print(c)
+        x0 = (x - w / 2) * figsize
+        y0 = (y - h / 2) * figsize
+        w *= figsize
+        h *= figsize
+        rect = Rectangle((x0, y0), w, h, lw=2, edgecolor=color_map[c], fill=False)
+        ax.add_patch(rect)
      

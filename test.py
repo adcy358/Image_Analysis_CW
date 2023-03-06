@@ -2,7 +2,7 @@ import torch
 from utils import cellboxes_to_boxes
 
 
-def test(test_loader, model, DEVICE='cuda'):
+def test(test_loader, model, DEVICE='cuda', prob_thres=0.6):
     model.eval()
     predictions_by_batch = []
     for batch_idx, (x, y) in enumerate(test_loader):
@@ -17,12 +17,12 @@ def test(test_loader, model, DEVICE='cuda'):
         predictions_by_batch.append(output)
 
     y_pred = torch.cat(tuple(predictions_by_batch))
-    y_pred = filter_predictions(y_pred)
+    y_pred = filter_predictions(y_pred, prob_thresh)
 
     return y_pred
 
 
-def filter_predictions(y, theta=0.55, remove_negative_preds=True):
+def filter_predictions(y, theta=0.6, remove_negative_preds=True):
     """
     Removes predictions where probability _p_ < theta and handles invalid predictions (negative coords).
 

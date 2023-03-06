@@ -2,7 +2,7 @@ import torch
 from utils import cellboxes_to_boxes
 
 
-def test(test_loader, model, DEVICE='cuda', prob_thres=0.6):
+def test(test_loader, model, DEVICE='cuda', prob_thresh=0.6):
     model.eval()
     predictions_by_batch = []
     for batch_idx, (x, y) in enumerate(test_loader):

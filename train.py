@@ -56,4 +56,4 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load
         loss_history.append(avg_loss)
         print(f"\033[34m EPOCH {epoch + 1}: \033[0m Mean loss {avg_loss:.3f}")
         
-        return loss_history
+    return loss_history

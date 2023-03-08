@@ -14,7 +14,7 @@ def save_checkpoint(model_state, filename='checkpoints.tar'):
     print("-> Saving checkpoint") 
     torch.save(model_state, filename)      
     
-def load_checkpoint(checkpoint): 
+def load_checkpoint(checkpoint, model, optimizer): 
     print("-> Loading checkpoint")
     model.load_state_dict(checkpoint['state_dict']) 
     optimizer.load_state_dict(checkpoint['optimizer'])  
@@ -23,7 +23,7 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load
     
     # WARNING: everytime we set load_model=False, it overwrites the previously saved file.
     if load_model: 
-        load_checkpoint(torch.load('checkpoints.tar')) 
+        load_checkpoint(torch.load('checkpoints.tar'), model, optimizer) 
     
     loss_history = []
     for epoch in range(epochs):

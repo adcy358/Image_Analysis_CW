@@ -162,7 +162,7 @@ def non_max_suppression(predictions, iou_threshold=0.5):
     return bound_boxes_after
 
 
-def get_boxes(y_pred, y_true): 
+def get_boxes(y_pred, y_true, iou_threshold=0.5): 
     
     """
         Prepares the predictions and ground truths for mAP
@@ -186,7 +186,7 @@ def get_boxes(y_pred, y_true):
     all_true_boxes = []
     
     for idx in range(batch_size): 
-        nms_boxes = nms(y_pred[idx]) 
+        nms_boxes = non_max_suppression(y_pred[idx], iou_threshold=iou_threshold) 
 
         for nms_box in nms_boxes: 
             if nms_box[2:] != [0, 0, 0, 0]: # to remove the boxes with only zeroes
@@ -327,7 +327,7 @@ def compute_ap(
     mAP = sum(average_precisions) / len(average_precisions) 
     return mAP
 
-def plot_bbox(img_idx, dataset, pred, figsize=448):
+def plot_bbox(img_idx, dataset, pred, figsize=448, ax=None):
     """
     Plots an image and its respective predictions
 
@@ -341,12 +341,15 @@ def plot_bbox(img_idx, dataset, pred, figsize=448):
         predicted bounding boxes to be plotted
     """
     img = dataset.__getitem__(img_idx)[0]
-    fig, ax = plt.subplots()
+    if ax is None:
+        fig, ax = plt.subplots()
     ax.imshow(img.permute(1, 2, 0))
 
     color_map = {0: "red", 1: "blue", 2: "yellow", 3: "green"}
     for c, p, x, y, w, h in pred:
-        c = c.int().item()
+        if type(c) == torch.Tensor:
+            c = c.item()
+        c = int(c)
         x0 = (x - w / 2) * figsize
         y0 = (y - h / 2) * figsize
         w *= figsize

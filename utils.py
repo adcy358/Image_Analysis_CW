@@ -121,51 +121,48 @@ def cellboxes_to_boxes(output, S=7, B=2, C=4):
     return all_bound_boxes
 
 
-def non_max_suppression(
-        bound_boxes, 
-        iou_threshold=0.5,
-):
+def non_max_suppression(predictions, iou_threshold=0.5): 
     
     """
-    Implements non_max suppression 
+    Implements Non Max Suppression 
     
     Input: 
-        bound_boxes(list): bounding box predictions for the class
-        iou_threshold(float): iou threshold
-        
-    Output:
-        bound_boxes_after(list): best predicted bounding box for each object in the image
-        
+        predictions(tensor): bounding box predictions for an image
+        iou_threshold(float): iou threshold 
+    
     """
-    # predictions = [c, p, x, y, w, h]
     
-    # 1. We sort the bound_boxes in reverse order according to confidence score 
-    bound_boxes = sorted(bound_boxes, key=lambda x: x[1], reverse=True) 
+    # predictions: (49, 6) 
+    bboxes = predictions.tolist() 
     
-    # 2. We create bound_boxes_after to store the best predicted boxes
-    bound_boxes_after = []
+    # We sort the bound_boxes in reverse order according to confidence score
+    sorted_bboxes = sorted(bboxes, key=lambda x: x[1], reverse=True) 
     
-    # 3. Filtering loop 
-    while bound_boxes: 
-        # We take the highest scoring box 
-        chosen_box = bound_boxes.pop(0) 
+    # We remove all the empty boxes
+    candidates = [box for box in sorted_bboxes if box[1] != 0]
+    
+    num_candidates = len(candidates) 
+    keep={idx:True for idx, box in enumerate(candidates)} 
+    # True: if we keep it 
+    # False: if we remove it  
+    
+    # we compare each image (that is set to True) with the rest
+    # and remove the ones that overlap
+    for i in range(num_candidates):
+        for j in range(i+1, num_candidates): 
+            if keep[i]:
+                if candidates[i][0] == candidates[j][0]: # they have the same class
+                    boxes_iou = intersection_over_union(torch.tensor(candidates[i][2:]), torch.tensor(candidates[j][2:]))
+                    if boxes_iou > iou_threshold: 
+                        keep[j] = False
         
-        # We compare it with the other boxes in bound_boxes
-        #  if the chosen_box and the comparing box have an iou > than the threshold, 
-        #  we remove the comparing box. 
-        for box in bound_boxes:
-            temp = []
-            boxes_iou = intersection_over_union(torch.tensor(chosen_box[2:]), torch.tensor(box[2:]))
-            if box[0] != chosen_box[0] or boxes_iou < iou_threshold:
-                temp.append(box)  
-        
-        bound_boxes = temp # bound_boxes with discarded boxes removed
-        bound_boxes_after.append(chosen_box) 
+    keep_boxes = [k for k, v in keep.items() if v]
+    bound_boxes_after = [candidates[i] for i in keep_boxes]
     
     return bound_boxes_after
 
 
-def get_boxes(y_pred, y_true, threshold=0.1): 
+def get_boxes(y_pred, y_true): 
     
     """
         Prepares the predictions and ground truths for mAP
@@ -182,21 +179,21 @@ def get_boxes(y_pred, y_true, threshold=0.1):
     """
 
     batch_size = y_pred.shape[0]
-    bound_boxes = y_pred.tolist() # [ [], [], []] 
+    #bound_boxes = y_pred.tolist() # [ [], [], []] 
     true_boxes = y_true.tolist()
     image_idx = 0 # label that determines the image 
     all_pred_boxes = []
     all_true_boxes = []
     
     for idx in range(batch_size): 
-        nms_boxes = non_max_suppression(bound_boxes[idx]) 
+        nms_boxes = nms(y_pred[idx]) 
 
         for nms_box in nms_boxes: 
             if nms_box[2:] != [0, 0, 0, 0]: # to remove the boxes with only zeroes
                 all_pred_boxes.append([image_idx] + nms_box) 
         
         for box in true_boxes[idx]: 
-            if box[1] > threshold: # to remove the boxes with only zeroes
+            if box[1] > 0: # to remove the boxes with only zeroes
                 all_true_boxes.append([image_idx] + box) 
             
         image_idx += 1

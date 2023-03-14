@@ -2,31 +2,38 @@ import torch
 from utils import cellboxes_to_boxes
 
 
-def test(test_loader, model, DEVICE='cuda', prob_thresh=0.6):
+def test(test_loader, model, DEVICE='cuda', filter_params=[]):
     model.eval()
     predictions_by_batch = []
+    gt_by_batch = []
+
     for batch_idx, (x, y) in enumerate(test_loader):
         x, y = x.to(DEVICE), y.to(DEVICE)
         output = model(x)
 
         # reshaping and converting coordinates
         output = torch.tensor(cellboxes_to_boxes(output))
+        ground_truths = torch.tensor(cellboxes_to_boxes(y))
+
 
         # sigmoid on probabilities
         torch.sigmoid_(output[..., 1])
         predictions_by_batch.append(output)
+        gt_by_batch.append(ground_truths) 
+
 
     y_pred = torch.cat(tuple(predictions_by_batch))
-    y_pred = filter_predictions(y_pred, prob_thresh)
+    y_pred = filter_predictions(y_pred, *filter_params)
+    y_true = torch.cat(tuple(gt_by_batch))
 
-    return y_pred
+    return y_pred, y_true
 
 
-def filter_predictions(y, theta=0.6, remove_negative_preds=True):
+def filter_predictions(y, theta=0.5, remove_negative_preds=True):
     """
     Removes predictions where probability _p_ < theta and handles invalid predictions (negative coords).
 
-    Attributes
+    Parameters
     ----------
         y: Tensor(N, SxS, (c, p, x, y, w, h)),
             predicted bounding boxes (SxS for each image)
@@ -45,8 +52,26 @@ def filter_predictions(y, theta=0.6, remove_negative_preds=True):
         y[mask] = 0
     else:
         # setting invalid x, y to 0
-        y[..., 2:4] *= (y[..., 2:4] > 0)
+        y[..., 2:4] *= (y[..., 2:4] > 0).int()
         # setting invalid w, h to abs(), at this point all other values are >= 0
         y[y < 0] *= -1
 
     return y
+
+def non_max_suppression(y_pred, iou_threshold=0.7):
+    """
+    **Non-max Suppression**
+    Reduces the number of predicted boxes for the same object.
+    
+    Parameters
+    ----------
+        y_pred: Tensor(N, SxS, (c, p, x, y, w, h)),
+            predicted bounding boxes after filtering - contains some entries set to 0
+        iou_threshold: float 0~1
+            min overlapping for predictions to be considered the same object
+    
+    """
+    for idx in range(y_pred.size()[0]):
+        pred_by_img = {idx : y_pred[idx, y_pred[idx, ::, 1] > 0]}
+        
+    

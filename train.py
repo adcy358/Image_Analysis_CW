@@ -19,7 +19,7 @@ def load_checkpoint(checkpoint, model, optimizer):
     model.load_state_dict(checkpoint['state_dict']) 
     optimizer.load_state_dict(checkpoint['optimizer'])  
 
-def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load_model=False):
+def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load_model=False, save_epochs=10):
     
     # WARNING: everytime we set load_model=False, it overwrites the previously saved file.
     if load_model: 
@@ -29,7 +29,7 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load
     for epoch in range(epochs):
           
         # save checkpoint   
-        if epoch % 10 == 0 and epoch != 0: 
+        if epoch % save_epochs == 0 and epoch != 0: 
             checkpoint = {
                 'state_dict': model.state_dict(), 
                 'optimizer': optimizer.state_dict(),

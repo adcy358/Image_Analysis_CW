@@ -14,6 +14,7 @@ https://www.kaggle.com/datasets/biancaferreira/african-wildlife
 - [X] visualization
 - [X] boundbox converter
 - [X] IOU
-- [ ] metrics
-- [ ] non-max suppression
-- [ ] further architectures
+- [X] metrics
+- [X] non-max suppression
+- [X] further architectures
+- [ ] analysis

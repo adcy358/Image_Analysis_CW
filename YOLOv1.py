@@ -55,7 +55,7 @@ class YOLOv1(nn.Module):
         if arch is not None:
             self.arch = arch
         else:
-            self.arch = pickle.load(open("default_arch.pkl", "rb"))
+            self.arch = pickle.load(open("Architectures/default_arch.pkl", "rb"))
         self.in_channels = input_channels
         self.darknet = self._get_darknet()
         self.fc = nn.Sequential(

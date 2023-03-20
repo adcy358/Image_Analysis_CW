@@ -112,11 +112,20 @@ class YOLO(nn.Module):
         :param C: number of classes
         """
         super(YOLO, self).__init__()
+        self.S = S
+        self.B = B
+        self.C = C
         self.architecture = pickle.load(open(f"Architectures/{arch}.pkl", "rb"))
         self.in_channels = input_channels
         self.darknet = self._create_darknet()
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = nn.AdaptiveAvgPool2d((S, S))
         self.fc = nn.Linear(1024, S * S * (B * 5 + C))
+        
+        self.fc = nn.Sequential(
+            nn.Linear(1024 * S * S, 4096),
+            nn.LeakyReLU(0.1),
+            nn.Linear(4096, S * S * (B * 5 + C))
+        )
 
     def forward(self, x):
         out = self.darknet(x)

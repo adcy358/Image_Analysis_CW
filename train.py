@@ -10,20 +10,22 @@ from tqdm import tqdm
 from YOLOv1 import YOLOv1
 import numpy as np 
 
-def save_checkpoint(model_state, filename='checkpoints.tar'): 
+def save_checkpoint(model_state, ckpt_filename): 
     print("-> Saving checkpoint") 
-    torch.save(model_state, filename)      
+    torch.save(model_state, ckpt_filename)      
     
 def load_checkpoint(checkpoint, model, optimizer): 
     print("-> Loading checkpoint")
     model.load_state_dict(checkpoint['state_dict']) 
-    optimizer.load_state_dict(checkpoint['optimizer'])  
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    epoch = checkpoint['epoch']  
 
-def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load_model=False, save_epochs=10):
+def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt_filename='checkpoints.tar',
+          load_model=False, save_epochs=10, hist_epoch=0):
     
     # WARNING: everytime we set load_model=False, it overwrites the previously saved file.
     if load_model: 
-        load_checkpoint(torch.load('checkpoints.tar'), model, optimizer) 
+        load_checkpoint(torch.load(ckpt_filename), model, optimizer) 
     
     loss_history = []
     for epoch in range(epochs):
@@ -33,8 +35,9 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', load
             checkpoint = {
                 'state_dict': model.state_dict(), 
                 'optimizer': optimizer.state_dict(),
+                'epoch': epoch + hist_epoch
             }
-            save_checkpoint(checkpoint) 
+            save_checkpoint(checkpoint, ckpt_filename) 
           
         # https://github.com/tqdm/tqdm.git
         loop = tqdm(train_loader, leave=True)

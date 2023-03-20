@@ -105,7 +105,7 @@ def convert_cellboxes(predictions, S=7, B=2, C=4):
 def cellboxes_to_boxes(output, S=7, B=2, C=4): 
 # SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py    
     # output: (N, S, S, [c1, c2, c3, c4, p1, x1, y1, w1, h1, p2, x2, y2, w2, h2])  
-    converted_pred = convert_cellboxes(output).reshape(output.shape[0], S*S, -1) # (N, S*S , 6)
+    converted_pred = convert_cellboxes(output, S=S, B=B, C=C).reshape(output.shape[0], S*S, -1) # (N, S*S , 6)
     converted_pred[..., 0] = converted_pred[..., 0].long() 
     all_bound_boxes = []
     
@@ -200,132 +200,7 @@ def get_boxes(y_pred, y_true, iou_threshold=0.5):
         
     return all_pred_boxes, all_true_boxes
 
-def compute_matches(detections, ground_truths, iou_threshold=0.5): 
-# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py
 
-    '''
-        Compute the FP and TP for a specific class
-        
-        Input: 
-            detection(list): bounding box predictions for the class
-            ground_truths(list): bounding box ground_truths for the class
-            iou_threshold(int): iou threshold
-        
-        Output: 
-            TP(tensor): TP for class c 
-            FP(tensor): FP for class c
-            total_true_bound_boxes(int): total number of bounding boxes
-            
-    '''
-    # We define amount_bound_boxes to keep track of the ground truths we have already covered
-    # amount_bound_boxes = { c: <num_bound_boxes for c> }
-    amount_bound_boxes = torch.zeros(len(ground_truths)) 
-    
-    # Sort by descending confidence score 
-    detections.sort(key=lambda x: x[2], reverse=True) 
-    
-    TP = torch.zeros((len(detections)))
-    FP = torch.zeros((len(detections)))
-    total_true_bound_boxes = len(ground_truths) 
-    
-    # For each image, we find the bouding box with best iou 
-    for detection_idx, detection in enumerate(detections): 
-    
-        # 1. From ground_truths, we take the gt for the bounding boxes the model predicted
-        # we store them in gt_img 
-        gt_img = [bound_box for bound_box in ground_truths if bound_box[0]==detection[0]]
-        num_gts = len(gt_img) # len(gt_img) = len(detections) 
-        
-        # 2. we compare the detection with all the images in gt_im 
-        #    to find the one with the best iou
-        best_iou = 0
-        for idx, gt in enumerate(gt_img): 
-            iou = intersection_over_union(
-                    torch.tensor(detection[3:]), 
-                    torch.tensor(gt[3:]),
-                )
-            if iou > best_iou: 
-                # track the best iou
-                best_iou = iou 
-                #track the idx of the bounding box with best iou
-                best_gt_idx = idx 
-    
-        # 3. We evaluate whether the predicted bounding box is correct 
-        #    by comparing with the threshold (i.e., see if it's TP or FP) 
-        # Note: we consider as TP the first bounding box to predict the target class,
-        #       the rest are FP
-        if best_iou > iou_threshold: 
-            if amount_bound_boxes[best_gt_idx] == 0: 
-                TP[detection_idx] = 1 
-                # we mark the gt as covered
-                amount_bound_boxes[best_gt_idx] = 1 
-            else: 
-                FP[detection_idx] = 1 
-        else:
-            FP[detection_idx] = 1 
-    
-    return FP, TP, total_true_bound_boxes 
-
-
-
-def compute_ap(
-    pred_boxes, true_boxes, iou_threshold=0.5, num_classes=4
-): 
-# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py   
-    '''
-        Compute the mean average precision
-        
-        Input: 
-            pred_boxes(list): [[bound_box_idx, c, p, x, y, w, h], ...]
-            true_boxes(list): [[bound_box_idx, c, p, x, y, w, h], ...]
-            num_classes(int): number of classes 
-            iou_threshold(int): iou threshold
-            
-        Output: 
-            mAP(int) = Mean average precision
-            
-    '''
-    average_precisions = []
-    
-    # Classify each prediction into TP and FP
-    FPs = []
-    TPs = []
-    total_gt_bound_boxes = 0 
-    for c in range(num_classes): 
-        # detections: [ <predictions for c> ]
-        detections = [pred_box for pred_box in pred_boxes if pred_box[1]==c]
-        # ground_truths: [ <gt for c> ]
-        ground_truths = [true_box for true_box in true_boxes if true_box[1]==c]
-        FP, TP, total_true_bound_boxes = compute_matches(detections, ground_truths, iou_threshold)
-        FPs.append(FP)
-        TPs.append(TP)
-        total_gt_bound_boxes += total_true_bound_boxes
-        
-    FPs = torch.cat(FPs)
-    TPs = torch.cat(TPs) 
-    # Compute precision and recall
-    TP_cumsum = torch.cumsum(TPs, dim=0) 
-    FP_cumsum = torch.cumsum(FPs, dim=0) 
-    
-    recalls = TP_cumsum / (total_gt_bound_boxes + 1e-6) # 1e-6 for stability
-    precisions = torch.divide(TP_cumsum, (TP_cumsum + FP_cumsum + 1e-6))
-    
-    # Plot the Precision-Recall graph  
-    recalls = torch.cat((torch.tensor([0]), recalls)) # x-axis: (0, recalls) 
-    precisions = torch.cat((torch.tensor([1]), precisions)) # y-axis (1, precisions) 
-    
-                             
-    # Calculate Area under PR curve 
-    # i.e., calculating the integral of the function 
-    # We use the Trapezoidal rule to approximate the integral 
-    #   by approximating the region under the graph of the function, 
-    #   f(x), as a trapezoid and calculating its area. 
-    #   this is done by torch.trapezoid()
-    area_PR = torch.trapezoid(precisions, recalls) 
-    average_precisions.append(area_PR) 
-    
-    mAP = sum(average_precisions) / len(average_precisions) 
-    return mAP
 
 def plot_bbox(img_idx, dataset, pred, figsize=448, ax=None):
     """

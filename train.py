@@ -18,7 +18,8 @@ def load_checkpoint(checkpoint, model, optimizer):
     print("-> Loading checkpoint")
     model.load_state_dict(checkpoint['state_dict']) 
     optimizer.load_state_dict(checkpoint['optimizer'])
-    epoch = checkpoint['epoch']  
+    epoch = checkpoint['epoch']
+    loss_history = checkpoint['loss_history']  
 
 def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt_filename='checkpoints.tar',
           load_model=False, save_epochs=10, hist_epoch=0):
@@ -35,7 +36,8 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt
             checkpoint = {
                 'state_dict': model.state_dict(), 
                 'optimizer': optimizer.state_dict(),
-                'epoch': epoch + hist_epoch
+                'epoch': epoch + hist_epoch,
+                'loss_history': loss_history,
             }
             save_checkpoint(checkpoint, ckpt_filename) 
           
@@ -58,5 +60,11 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt
         avg_loss = sum(mean_loss)/len(mean_loss)
         loss_history.append(avg_loss)
         print(f"\033[34m EPOCH {epoch + 1}: \033[0m Mean loss {avg_loss:.3f}")
-        
+    checkpoint = {
+                'state_dict': model.state_dict(), 
+                'optimizer': optimizer.state_dict(),
+                'epoch': epoch+1, 
+                'loss_history': loss_history,
+            }
+    save_checkpoint(checkpoint, ckpt_filename)    
     return loss_history

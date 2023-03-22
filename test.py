@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from utils import cellboxes_to_boxes
 
 
@@ -6,18 +7,19 @@ def test(test_loader, model, DEVICE='cuda', filter_params=[]):
     model.eval()
     predictions_by_batch = []
     gt_by_batch = []
+    S, B, C = model.S, model.B, model.C
 
     for batch_idx, (x, y) in enumerate(test_loader):
         x, y = x.to(DEVICE), y.to(DEVICE)
         output = model(x)
 
         # reshaping and converting coordinates
-        output = torch.tensor(cellboxes_to_boxes(output))
-        ground_truths = torch.tensor(cellboxes_to_boxes(y))
+        output = torch.tensor(cellboxes_to_boxes(output, S=S, B=B, C=C))
+        ground_truths = torch.tensor(cellboxes_to_boxes(y, S=S, B=B, C=C))
 
 
         # sigmoid on probabilities
-        torch.sigmoid_(output[..., 1])
+        output[..., 1] = torch.sigmoid(output[..., 1] * 2)
         predictions_by_batch.append(output)
         gt_by_batch.append(ground_truths) 
 

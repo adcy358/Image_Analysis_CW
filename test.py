@@ -19,19 +19,19 @@ def test(test_loader, model, DEVICE='cuda', filter_params=[]):
 
 
         # sigmoid on probabilities
-        output[..., 1] = torch.sigmoid(output[..., 1] * 2)
+        output[..., 1] = torch.sigmoid(output[..., 1])
         predictions_by_batch.append(output)
         gt_by_batch.append(ground_truths) 
 
 
     y_pred = torch.cat(tuple(predictions_by_batch))
-    y_pred = filter_predictions(y_pred, *filter_params)
+    y_pred = filter_predictions(y_pred, C, *filter_params)
     y_true = torch.cat(tuple(gt_by_batch))
 
     return y_pred, y_true
 
 
-def filter_predictions(y, theta=0.5, remove_negative_preds=True):
+def filter_predictions(y, C=5, theta=0.5, remove_negative_preds=True):
     """
     Removes predictions where probability _p_ < theta and handles invalid predictions (negative coords).
 
@@ -46,7 +46,10 @@ def filter_predictions(y, theta=0.5, remove_negative_preds=True):
     """
     # setting entries with p < theta to 0, keeping shape (N, SxS, 6)
     y[y[..., 1] < theta] = 0
-
+    
+    # removing background class predictions
+    y[y[..., 0] == C-1] = 0
+    
     # predictions with x, y, w, h < 0:
     if remove_negative_preds:
         # setting invalid predictions to 0
@@ -59,21 +62,4 @@ def filter_predictions(y, theta=0.5, remove_negative_preds=True):
         y[y < 0] *= -1
 
     return y
-
-def non_max_suppression(y_pred, iou_threshold=0.7):
-    """
-    **Non-max Suppression**
-    Reduces the number of predicted boxes for the same object.
-    
-    Parameters
-    ----------
-        y_pred: Tensor(N, SxS, (c, p, x, y, w, h)),
-            predicted bounding boxes after filtering - contains some entries set to 0
-        iou_threshold: float 0~1
-            min overlapping for predictions to be considered the same object
-    
-    """
-    for idx in range(y_pred.size()[0]):
-        pred_by_img = {idx : y_pred[idx, y_pred[idx, ::, 1] > 0]}
-        
     

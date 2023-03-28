@@ -8,6 +8,7 @@ old_path = 'archive/'
 new_path = "African_Wildlife_with_val/"
 train_size = int(0.6 * 376)
 test_val_size = (376 - train_size) // 2
+np.random.seed=103
 
 for idx, c in enumerate(classes.keys()):
     fnames = os.listdir(f'archive/{c}/')

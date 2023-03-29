@@ -21,14 +21,15 @@ def load_checkpoint(checkpoint, model, optimizer):
     epoch = checkpoint['epoch']
     loss_history = checkpoint['loss_history']  
 
-def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt_filename='checkpoints.tar',
-          load_model=False, save_epochs=10, hist_epoch=0):
+def train(train_loader, val_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt_filename='checkpoints.tar',
+          load_model=False, save_epochs=10):
     
     # WARNING: everytime we set load_model=False, it overwrites the previously saved file.
     if load_model: 
         load_checkpoint(torch.load(ckpt_filename), model, optimizer) 
     
     loss_history = []
+    val_loss_history = []
     for epoch in range(epochs):
           
         # save checkpoint   
@@ -36,14 +37,15 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt
             checkpoint = {
                 'state_dict': model.state_dict(), 
                 'optimizer': optimizer.state_dict(),
-                'epoch': epoch + hist_epoch,
+                'epoch': epoch,
                 'loss_history': loss_history,
             }
             save_checkpoint(checkpoint, ckpt_filename) 
           
         # https://github.com/tqdm/tqdm.git
         loop = tqdm(train_loader, leave=True)
-        mean_loss = []
+        mean_loss = [] 
+        val_mean_loss = []
 
         for batch_idx, (x, y) in enumerate(loop):
             x, y = x.to(DEVICE), y.to(DEVICE)
@@ -57,14 +59,26 @@ def train(train_loader, model, optimizer, criterion, epochs, DEVICE='cuda', ckpt
             # update progress bar
             loop.set_postfix(loss=loss.item())
         
+        for batch_idx, (x, y) in enumerate(val_loader):
+            x, y = x.to(DEVICE), y.to(DEVICE)
+            output = model(x)
+            loss = criterion(output, y)
+            val_mean_loss.append(loss.item())
+            
+            
         avg_loss = sum(mean_loss)/len(mean_loss)
+        val_avg_loss = sum(val_mean_loss)/len(val_mean_loss)
+        val_loss_history.append(val_avg_loss)
         loss_history.append(avg_loss)
-        print(f"\033[34m EPOCH {epoch + 1}: \033[0m Mean loss {avg_loss:.3f}")
-    checkpoint = {
-                'state_dict': model.state_dict(), 
-                'optimizer': optimizer.state_dict(),
-                'epoch': epoch+1, 
-                'loss_history': loss_history,
-            }
-    save_checkpoint(checkpoint, ckpt_filename)    
-    return loss_history
+        print(f"\033[34m EPOCH {epoch + 1}: \033[0m Train loss {avg_loss:.3f}, Val loss {val_avg_loss}")
+        
+    if epochs != 0: 
+        checkpoint = {
+                    'state_dict': model.state_dict(), 
+                    'optimizer': optimizer.state_dict(),
+                    'epoch': epoch+1, 
+                    'loss_history': loss_history,
+                }
+        save_checkpoint(checkpoint, ckpt_filename)    
+        
+    return loss_history, val_loss_history

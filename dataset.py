@@ -5,26 +5,38 @@ from PIL import Image
 
 class AfricanWildlifeDataset(torch.utils.data.Dataset):
     def __init__(
-        self, train_dir, test_dir, label_dir, S=7, B=2, C=4, transform=None, istesting=False
+        self, train_dir, test_dir, val_dir, label_dir, S=7, B=2, C=4, transform=None, istesting=False, isvalidation=False
     ):
         self.annotations = label_dir
+        self.val_dir = val_dir
         self.train_dir = train_dir
         self.test_dir = test_dir
         self.transform = transform
-        self.istesting = istesting       
+        self.istesting = istesting   
+        self.isvalidation = isvalidation
         self.S = S
         self.B = B
         self.C = C
 
     def __len__(self):
-        return len(os.listdir(self.train_dir)) if not self.istesting else len(os.listdir(self.test_dir))   
+        
+        if self.isvalidation: 
+            return len(os.listdir(self.val_dir))
+        else:
+            return len(os.listdir(self.train_dir)) if not self.istesting else len(os.listdir(self.test_dir))   
 
+        
     def __getitem__(self, index):
         #path to label
         
-        if not self.istesting: 
+        if not self.istesting and not self.isvalidation: 
             file = os.listdir(self.train_dir)
             img_path = f'{self.train_dir}/{file[index]}'
+            
+        elif self.isvalidation:
+            file = os.listdir(self.val_dir)
+            img_path = f'{self.val_dir}/{file[index]}'
+            
         else: 
             file = os.listdir(self.test_dir)
             img_path = f'{self.test_dir}/{file[index]}'

@@ -7,6 +7,7 @@ from dataset import AfricanWildlifeDataset
 from utils import intersection_over_union, convert_cellboxes, cellboxes_to_boxes
 from loss import YoloLoss
 from tqdm import tqdm
+from YOLOv1 import YOLOv1
 import numpy as np 
 
 def save_checkpoint(model_state, ckpt_filename): 

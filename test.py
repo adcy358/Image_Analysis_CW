@@ -19,7 +19,7 @@ def test(test_loader, model, DEVICE='cuda', filter_params=[]):
 
 
         # sigmoid on probabilities
-        output[..., 1] = torch.sigmoid(output[..., 1])
+        output[..., 1] = torch.sigmoid(output[..., 1] * 2)
         predictions_by_batch.append(output)
         gt_by_batch.append(ground_truths) 
 
@@ -48,7 +48,7 @@ def filter_predictions(y, C=5, theta=0.5, remove_negative_preds=True):
     y[y[..., 1] < theta] = 0
     
     # removing background class predictions
-    y[y[..., 0] == C-1] = 0
+    # y[y[..., 0] == C-1] = 0
     
     # predictions with x, y, w, h < 0:
     if remove_negative_preds:

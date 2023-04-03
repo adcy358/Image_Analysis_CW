@@ -47,12 +47,8 @@ class AfricanWildlifeDataset(torch.utils.data.Dataset):
         boxes = []
         with open(label_path) as f: # open the image 
             for label in f.readlines():
-                class_label, x, y, width, height = [
-                    float(x) if float(x) != int(float(x)) else int(x)
-                    for x in label.replace("\n", "").split()
-                ]
-
-                boxes.append([class_label, x, y, width, height])
+                class_label, x, y, width, height = [x for x in label.replace("\n", "").split()]
+                boxes.append([int(class_label), float(x), float(y), float(width), float(height)])
             
         image = Image.open(img_path)
         boxes = torch.tensor(boxes)

@@ -47,7 +47,11 @@ class AfricanWildlifeDataset(torch.utils.data.Dataset):
         boxes = []
         with open(label_path) as f: # open the image 
             for label in f.readlines():
+<<<<<<< HEAD
                 class_label, x, y, width, height = label.replace("\n", "").split()
+=======
+                class_label, x, y, width, height = [x for x in label.replace("\n", "").split()]
+>>>>>>> 173860bbba9ec6a042e8fe93b58d85650c47725c
                 boxes.append([int(class_label), float(x), float(y), float(width), float(height)])
             
         image = Image.open(img_path)

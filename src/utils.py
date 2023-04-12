@@ -227,4 +227,18 @@ def plot_bbox(img_idx, dataset, pred, figsize=448, ax=None):
         h *= figsize
         rect = Rectangle((x0, y0), w, h, lw=2, edgecolor=color_map[c], fill=False)
         ax.add_patch(rect)
-     
+
+
+def convert_dict(d, with_score=True):
+    """
+    Helper function
+    """
+    boxes_by_img = []
+    for key, val in d.items():
+        l = {}
+        l['boxes'] = torch.tensor([x[2:] for x in val])
+        if with_score:
+            l['scores'] = torch.tensor([x[1] for x in val])
+        l['labels'] = torch.tensor([int(x[0]) for x in val])
+        boxes_by_img.append(l)
+    return boxes_by_img

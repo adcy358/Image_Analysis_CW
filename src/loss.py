@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn 
 from utils import intersection_over_union
 
+
 class YoloLoss(nn.Module): 
 # SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/loss.py
     '''
@@ -47,13 +48,7 @@ class YoloLoss(nn.Module):
         #    S1) x_i, y_i, x_hat_i, y_hat_i        
         #    we only compute the box if there is an object in that cell 
         #    we take the coordinates for the box with highest IOU (their indexes are stored in bestbox)
-        box_predictions = exists_box * (
-            (
-                bestbox * predictions[..., 10:14]
-                + (1 - bestbox) * predictions[..., 5:9]
-            )
-        )
-
+        box_predictions = exists_box * (bestbox * predictions[..., 10:14] + (1 - bestbox) * predictions[..., 5:9])
         box_targets = exists_box * target[..., 5:9]   
 
         #   S2) w_i, w_i, h_hat_i, h_hat_i
@@ -62,12 +57,10 @@ class YoloLoss(nn.Module):
         )
         box_targets[..., 2:4] = torch.sqrt(box_targets[..., 2:4])
 
-
         box_loss = self.mse(
             torch.flatten(box_predictions, end_dim=-2),
             torch.flatten(box_targets, end_dim=-2),
         )  # end_dim = -2: (N, S, S, 4) -> (N*S*S, 4)
-
 
         # SERIES 3: specifies if there is an object 
         pred_box = (

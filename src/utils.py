@@ -48,8 +48,9 @@ def intersection_over_union(boxes_preds, boxes_labels):
     
     return iou
 
+
 def convert_cellboxes(predictions, S=7, B=2, C=4): 
-# SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py   
+    # SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py
     """
     Converts bounding boxes output: 
        from: Yolo with an image split size of S relative to the cell
@@ -100,8 +101,7 @@ def convert_cellboxes(predictions, S=7, B=2, C=4):
 
     return converted_preds
 
-        
-    
+
 def cellboxes_to_boxes(output, S=7, B=2, C=4): 
 # SOURCE: https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/object_detection/YOLO/utils.py    
     # output: (N, S, S, [c1, c2, c3, c4, p1, x1, y1, w1, h1, p2, x2, y2, w2, h2])  
@@ -121,17 +121,14 @@ def cellboxes_to_boxes(output, S=7, B=2, C=4):
     return all_bound_boxes
 
 
-def non_max_suppression(predictions, iou_threshold=0.5): 
-    
+def non_max_suppression(predictions, iou_threshold=0.5):
     """
-    Implements Non Max Suppression 
+    Implements Non-Maximum Suppression
     
     Input: 
         predictions(tensor): bounding box predictions for an image
-        iou_threshold(float): iou threshold 
-    
+        iou_threshold(float): iou threshold
     """
-    
     # predictions: (49, 6) 
     bboxes = predictions.tolist() 
     
@@ -179,7 +176,7 @@ def get_boxes(y_pred, y_true, iou_threshold=0.5):
     """
 
     batch_size = y_pred.shape[0]
-    #bound_boxes = y_pred.tolist() # [ [], [], []] 
+    # bound_boxes = y_pred.tolist() # [ [], [], []] 
     true_boxes = y_true.tolist()
     image_idx = 0 # label that determines the image 
     all_pred_boxes = []
@@ -199,7 +196,6 @@ def get_boxes(y_pred, y_true, iou_threshold=0.5):
         image_idx += 1
         
     return all_pred_boxes, all_true_boxes
-
 
 
 def plot_bbox(img_idx, dataset, pred, figsize=448, ax=None):

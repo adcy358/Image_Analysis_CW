@@ -1,9 +1,11 @@
 import torch
-import torch.nn.functional as F
 from utils import cellboxes_to_boxes
 
 
 def test(test_loader, model, DEVICE='cuda', filter_params=[]):
+    """
+    Test loop
+    """
     model.eval()
     predictions_by_batch = []
     gt_by_batch = []
@@ -17,12 +19,10 @@ def test(test_loader, model, DEVICE='cuda', filter_params=[]):
         output = torch.tensor(cellboxes_to_boxes(output, S=S, B=B, C=C))
         ground_truths = torch.tensor(cellboxes_to_boxes(y, S=S, B=B, C=C))
 
-
         # sigmoid on probabilities
-        output[..., 1] = torch.sigmoid(output[..., 1] * 2)
+        output[..., 1] = torch.sigmoid(output[..., 1])
         predictions_by_batch.append(output)
         gt_by_batch.append(ground_truths) 
-
 
     y_pred = torch.cat(tuple(predictions_by_batch))
     y_pred = filter_predictions(y_pred, C, *filter_params)
@@ -31,7 +31,7 @@ def test(test_loader, model, DEVICE='cuda', filter_params=[]):
     return y_pred, y_true
 
 
-def filter_predictions(y, C=5, theta=0.5, remove_negative_preds=True):
+def filter_predictions(y, theta=0.5, remove_negative_preds=True):
     """
     Removes predictions where probability _p_ < theta and handles invalid predictions (negative coords).
 
@@ -47,9 +47,6 @@ def filter_predictions(y, C=5, theta=0.5, remove_negative_preds=True):
     # setting entries with p < theta to 0, keeping shape (N, SxS, 6)
     y[y[..., 1] < theta] = 0
     
-    # removing background class predictions
-    # y[y[..., 0] == C-1] = 0
-    
     # predictions with x, y, w, h < 0:
     if remove_negative_preds:
         # setting invalid predictions to 0
@@ -58,6 +55,7 @@ def filter_predictions(y, C=5, theta=0.5, remove_negative_preds=True):
     else:
         # setting invalid x, y to 0
         y[..., 2:4] *= (y[..., 2:4] > 0).int()
+
         # setting invalid w, h to abs(), at this point all other values are >= 0
         y[y < 0] *= -1
 

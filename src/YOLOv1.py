@@ -38,7 +38,6 @@ class ResidualBlock(nn.Module):
         return out
 
 
-    
 class YOLO(nn.Module):
     """
     *YOLO v1*
@@ -61,7 +60,6 @@ class YOLO(nn.Module):
         self.darknet = self._create_darknet()
         self.avgpool = nn.AdaptiveAvgPool2d((S, S))
         self._create_fc(fc)
-        
 
     def forward(self, x):
         out = self.darknet(x)
@@ -69,12 +67,14 @@ class YOLO(nn.Module):
         out = torch.flatten(out, start_dim=1)
         out = self.fc(out)
         return out
-    
-    
+
     def _create_fc(self, fc):
+        """
+        Creates the fully connected layers
+        """
         S, B, C = self.S, self.B, self.C
         if fc == 1:
-            self.fc == nn.Linear(1024 * S * S, S * S * (B * 5 + C))
+            l = nn.Linear(1024 * S * S, S * S * (B * 5 + C))
         else:
             l = [nn.Linear(1024 * S * S, 4096), nn.LeakyReLU(0.1)]
             for _ in range(fc - 2):
@@ -84,7 +84,6 @@ class YOLO(nn.Module):
         
         self.fc = nn.Sequential(*l)
 
-    
     def _create_darknet(self):
         """
         Creates the darknet layers
@@ -96,7 +95,6 @@ class YOLO(nn.Module):
             darknet.append(block)
         return nn.Sequential(*darknet)
 
-    
     def _make_block(self, n_int, convs, type=None):
         """
         Creates a block of ConvLayer, given their parameters (convs).

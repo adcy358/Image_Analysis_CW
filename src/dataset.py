@@ -5,37 +5,27 @@ from PIL import Image
 
 class AfricanWildlifeDataset(torch.utils.data.Dataset):
     def __init__(
-        self, train_dir, test_dir, val_dir, label_dir, S=7, B=2, C=4, transform=None, istesting=False, isvalidation=False
+        self, train_dir, test_dir, label_dir, S=7, B=2, C=4, transform=None, istesting=False
     ):
         self.annotations = label_dir
-        self.val_dir = val_dir
         self.train_dir = train_dir
         self.test_dir = test_dir
         self.transform = transform
         self.istesting = istesting   
-        self.isvalidation = isvalidation
         self.S = S
         self.B = B
         self.C = C
 
     def __len__(self):
-        
-        if self.isvalidation: 
-            return len(os.listdir(self.val_dir))
-        else:
-            return len(os.listdir(self.train_dir)) if not self.istesting else len(os.listdir(self.test_dir))   
+        return len(os.listdir(self.train_dir)) if not self.istesting else len(os.listdir(self.test_dir))   
 
         
     def __getitem__(self, index):
         #path to label
         
-        if not self.istesting and not self.isvalidation: 
+        if not self.istesting: 
             file = os.listdir(self.train_dir)
             img_path = f'{self.train_dir}/{file[index]}'
-            
-        elif self.isvalidation:
-            file = os.listdir(self.val_dir)
-            img_path = f'{self.val_dir}/{file[index]}'
             
         else: 
             file = os.listdir(self.test_dir)
@@ -47,7 +37,7 @@ class AfricanWildlifeDataset(torch.utils.data.Dataset):
         boxes = []
         with open(label_path) as f: # open the image 
             for label in f.readlines():
-                class_label, x, y, width, height = label.replace("\n", "").split()
+                class_label, x, y, width, height = [x for x in label.replace("\n", "").split()]
                 boxes.append([int(class_label), float(x), float(y), float(width), float(height)])
             
         image = Image.open(img_path)
